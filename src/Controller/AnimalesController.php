@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Animal; 
+
+use function PHPUnit\Framework\isNull;
+class AnimalesController extends AbstractController
+{
+    #[Route('/animales', name: 'app_animales')]
+    public function index(EntityManagerInterface $entityManagerInterface): Response
+    {
+        return $this->render('animales/index.html.twig', [
+            "animales" => $entityManagerInterface->getRepository(Animal::class)->findAll(),
+        ]);
+    }
+    #[Route('/animales/borrar/{animal}', name: 'app_animales_borrar')]
+    public function borrar(EntityManagerInterface $entityManager, Animal $animal):Response
+    {
+        $entityManager->remove($animal);
+        $entityManager->flush();
+
+        return new RedirectResponse(
+            $this->generateUrl('app_animales')
+        );
+    }
+
+    #[Route('/animales/editar/{animal?}', name: 'app_animales_editar')]
+    public function editar(?Animal $animal=null):Response
+    {
+        return $this->render('animales/edicion.html.twig', [
+            "animal" => $animal
+        ]);
+    }
+
+    #[Route('/animales/guardar/{animal?}', name: 'app_animales_guardar', methods:["POST"])]
+    public function guardar(EntityManagerInterface $entityManager, Request $request, ?Animal $animal=null):Response
+    {
+        //$request->request->has
+        if(is_null($animal)){
+            $animal = new Animal();
+        }
+
+        $animal->setPasos($request->request->getInt("steps",0));
+        $animal->setNombre($request->request->get("name", "Nombre Random"));
+        //$animal->setNacimiento($request->request->get("birthdate", ""));
+        $animal->setNacimiento(
+            new \DateTimeImmutable($request->request->get("birthdate", "")) 
+        );
+
+        $entityManager->persist($animal);
+        $entityManager->flush();
+
+        return new RedirectResponse(
+            $this->generateUrl('app_animales')
+        );
+
+
+    }
+}
+
+        /* [
+            [
+                "nombre"=>"Louro",
+                "passos"=> 2,
+                "nacimiento"=>"2020-08-24 12:25",   
+            ],
+            [
+                "nombre"=>"firulais",
+                "passos"=> 4,
+                "nacimiento"=>"2020-08-24 12:25",   
+            ],
+        ]
+        
+        ]);
+    }
+
+    #[Route('/raton', name: 'app_raton')]
+    public function raton(): Response
+    {
+        return new Response ("soy un raton");
+    }
+
+    #[Route('/animales/borrar/{animal)', name: 'app_animales_borrar')]
+    public function borrar(EntityManagerInterface $entityManager, Animal $animal): Response
+    {
+        $entityManager->remove($animal);
+        $entityManager->flush;
+        
+        return new RedirectResponse{} */
